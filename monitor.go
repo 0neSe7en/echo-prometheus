@@ -61,6 +61,9 @@ func NewMetric() echo.MiddlewareFunc {
 
 func NewMetricWithConfig(config PrometheusConfig) echo.MiddlewareFunc {
 	initCollector(config.Namespace)
+	if config.Skipper == nil {
+		config.Skipper = DefaultPrometheusConfig.Skipper
+	}
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if config.Skipper(c) {
