@@ -1,14 +1,16 @@
 package echoprometheus
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/prometheus/client_golang/prometheus"
-	"strconv"
-	"time"
 )
 
 type (
+	// PrometheusConfig contains the Skipper middleware and Namespace
 	PrometheusConfig struct {
 		Skipper   middleware.Skipper
 		Namespace string
@@ -16,6 +18,8 @@ type (
 )
 
 var (
+	// DefaultPrometheusConfig supplies Prometheus client with the default
+	// skipper and the 'echo' namespace.
 	DefaultPrometheusConfig = PrometheusConfig{
 		Skipper:   middleware.DefaultSkipper,
 		Namespace: "echo",
@@ -55,10 +59,12 @@ func initCollector(namespace string) {
 	prometheus.MustRegister(echoReqQps, echoReqDuration, echoOutBytes)
 }
 
+// NewMetric returns an echo middleware with the default configuration.
 func NewMetric() echo.MiddlewareFunc {
 	return NewMetricWithConfig(DefaultPrometheusConfig)
 }
 
+// NewMetricWithConfig returns an echo middleware with a custom configuration.
 func NewMetricWithConfig(config PrometheusConfig) echo.MiddlewareFunc {
 	initCollector(config.Namespace)
 	if config.Skipper == nil {
