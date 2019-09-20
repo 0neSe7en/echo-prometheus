@@ -10,9 +10,15 @@ import (
 )
 
 type (
-	// PrometheusConfig contains the Skipper middleware and Namespace
+	// PrometheusConfig contains the configuation for the echo-prometheus
+	// middleware.
 	PrometheusConfig struct {
-		Skipper   middleware.Skipper
+		// Skipper defines a function to skip middleware.
+		Skipper middleware.Skipper
+
+		// Namespace is single-word prefix relevant to the domain the metric
+		// belongs to. For metrics specific to an application, the prefix is
+		// usually the application name itself.
 		Namespace string
 	}
 )
