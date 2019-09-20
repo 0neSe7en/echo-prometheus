@@ -27,13 +27,13 @@ var (
 )
 
 var (
-	echoReqQps      *prometheus.CounterVec
+	echoReqQPS      *prometheus.CounterVec
 	echoReqDuration *prometheus.SummaryVec
 	echoOutBytes    prometheus.Summary
 )
 
 func initCollector(namespace string) {
-	echoReqQps = prometheus.NewCounterVec(
+	echoReqQPS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "http_request_total",
@@ -56,7 +56,7 @@ func initCollector(namespace string) {
 			Help:      "HTTP response bytes.",
 		},
 	)
-	prometheus.MustRegister(echoReqQps, echoReqDuration, echoOutBytes)
+	prometheus.MustRegister(echoReqQPS, echoReqDuration, echoOutBytes)
 }
 
 // NewMetric returns an echo middleware with the default configuration.
@@ -87,7 +87,7 @@ func NewMetricWithConfig(config PrometheusConfig) echo.MiddlewareFunc {
 			status := strconv.Itoa(res.Status)
 			elapsed := time.Since(start).Seconds()
 			bytesOut := float64(res.Size)
-			echoReqQps.WithLabelValues(status, req.Method, req.Host, uri).Inc()
+			echoReqQPS.WithLabelValues(status, req.Method, req.Host, uri).Inc()
 			echoReqDuration.WithLabelValues(req.Method, req.Host, uri).Observe(elapsed)
 			echoOutBytes.Observe(bytesOut)
 			return nil
