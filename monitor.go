@@ -1,21 +1,31 @@
 package echoprometheus
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/prometheus/client_golang/prometheus"
-	"strconv"
-	"time"
 )
 
 type (
+	// PrometheusConfig contains the configuation for the echo-prometheus
+	// middleware.
 	PrometheusConfig struct {
-		Skipper   middleware.Skipper
+		// Skipper defines a function to skip middleware.
+		Skipper middleware.Skipper
+
+		// Namespace is single-word prefix relevant to the domain the metric
+		// belongs to. For metrics specific to an application, the prefix is
+		// usually the application name itself.
 		Namespace string
 	}
 )
 
 var (
+	// DefaultPrometheusConfig supplies Prometheus client with the default
+	// skipper and the 'echo' namespace.
 	DefaultPrometheusConfig = PrometheusConfig{
 		Skipper:   middleware.DefaultSkipper,
 		Namespace: "echo",
@@ -23,13 +33,13 @@ var (
 )
 
 var (
-	echoReqQps      *prometheus.CounterVec
+	echoReqQPS      *prometheus.CounterVec
 	echoReqDuration *prometheus.SummaryVec
 	echoOutBytes    prometheus.Summary
 )
 
 func initCollector(namespace string) {
-	echoReqQps = prometheus.NewCounterVec(
+	echoReqQPS = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Name:      "http_request_total",
@@ -52,13 +62,15 @@ func initCollector(namespace string) {
 			Help:      "HTTP response bytes.",
 		},
 	)
-	prometheus.MustRegister(echoReqQps, echoReqDuration, echoOutBytes)
+	prometheus.MustRegister(echoReqQPS, echoReqDuration, echoOutBytes)
 }
 
+// NewMetric returns an echo middleware with the default configuration.
 func NewMetric() echo.MiddlewareFunc {
 	return NewMetricWithConfig(DefaultPrometheusConfig)
 }
 
+// NewMetricWithConfig returns an echo middleware with a custom configuration.
 func NewMetricWithConfig(config PrometheusConfig) echo.MiddlewareFunc {
 	initCollector(config.Namespace)
 	if config.Skipper == nil {
@@ -81,7 +93,7 @@ func NewMetricWithConfig(config PrometheusConfig) echo.MiddlewareFunc {
 			status := strconv.Itoa(res.Status)
 			elapsed := time.Since(start).Seconds()
 			bytesOut := float64(res.Size)
-			echoReqQps.WithLabelValues(status, req.Method, req.Host, uri).Inc()
+			echoReqQPS.WithLabelValues(status, req.Method, req.Host, uri).Inc()
 			echoReqDuration.WithLabelValues(req.Method, req.Host, uri).Observe(elapsed)
 			echoOutBytes.Observe(bytesOut)
 			return nil
